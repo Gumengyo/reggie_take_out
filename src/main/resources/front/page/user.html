@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0,user-scalable=no,minimal-ui">
+    <title>菩提阁</title>
+    <link rel="icon" href="./../images/favico.ico">
+    <!--element-ui的样式-->
+    <link rel="stylesheet" href="../../backend/plugins/element-ui/index.css" />
+    <!-- 引入样式  -->
+    <link rel="stylesheet" href="../styles/index.css" />
+    <!--引入vant样式-->
+    <link rel="stylesheet" href="../styles/vant.min.css"/>
+    <!--本页面内容的样式-->
+    <link rel="stylesheet" href="./../styles/user.css" />
+    <style>
+        .msgbox{
+            width: 350px !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="user" class="app">
+        <div class="divHead">
+            <div class="divTitle">
+                <i class="el-icon-arrow-left" @click="goBack"></i>个人中心
+            </div>
+            <div class="divUser">
+                <img v-if="this.userInfo.avatar != null" :src="imgPathConvert(this.userInfo.avatar)"/>
+                <img v-if="this.userInfo.avatar == null" slot="" src="./../images/headPage.png"/>
+                <div class="desc">
+                    <div class="divName">{{this.userInfo.name}}
+<!--                        <img src="./../images/women.png"/>-->
+                        <i :class="this.userInfo.sex==1?'el-icon-male':'el-icon-female'"
+                            :style="this.userInfo.sex==1 ? 'color:MediumBlue' :'color:HotPink'"
+                            style="font-size: 15px;font-weight: bold"></i>
+                    </div>
+                    <div class="divPhone">{{this.userInfo.phone}}</div>
+                </div>
+                <div class="aesc">
+                    <div class="divInfo" @click="goEditUserInfo"><p>「编辑资料」</P></div>
+                </div>
+            </div>
+        </div>
+        <el-dialog
+                title="编辑资料"
+                :visible.sync="centerDialogVisible"
+                width="90%"
+                center>
+            <el-form ref="form" :model="form" status-icon :rules="rules" label-width="65px" >
+
+                <el-form-item prop="avatar" label="头像:" class="uploadImg">
+                    <el-upload
+                            class="avatar-uploader"
+                            action="/common/upload"
+                            :show-file-list="false"
+                            :on-success="handleAvatarSuccess"
+                            :on-change="onChange"
+                            ref="upload"
+                    >
+                        <img v-if="form.avatar" :src="imgPathConvert(form.avatar)" class="avatar"
+                             style="width: 58rem;height: 58rem;border-radius: 50%;" />
+                        <i v-else class="el-icon-plus avatar-uploader-icon" ></i>
+                    </el-upload>
+                </el-form-item>
+
+                <el-form-item label="名字" prop="name">
+                    <el-col :span="20">
+                        <el-input v-model="form.name" ></el-input>
+                    </el-col>
+                </el-form-item>
+
+                <el-form-item label="电话" prop="phone">
+                    <el-col :span="20">
+                        <el-input v-model="form.phone"></el-input>
+                    </el-col>
+                </el-form-item>
+
+                <el-form-item label="性别" prop="sex">
+                    <el-radio-group v-model="form.sex">
+                        <el-radio label="0">女</el-radio>
+                        <el-radio label="1">男</el-radio>
+                    </el-radio-group>
+                </el-form-item>
+
+                <el-form-item label="身份证" prop="idNumber">
+                    <el-col :span="20">
+                        <el-input v-model="form.idNumber"></el-input>
+                    </el-col>
+                </el-form-item>
+
+            </el-form>
+
+            <span slot="footer" class="dialog-footer">
+                    <el-button @click="cancle" >取 消</el-button>
+                    <el-button type="primary" @click="save" >确 定</el-button>
+                </span>
+        </el-dialog>
+        <div class="divContent">
+            <div class="divLinks">
+                <div class="item" @click="toAddressPage">
+                    <img src="./../images/locations.png"/>
+                    <p>地址管理</p>
+                    <i class="el-icon-arrow-right"></i>
+                </div>
+                <div class="divSplit"></div>
+                <div class="item" @click="toOrderPage">
+                    <img src="./../images/orders.png"/>
+                    <p>历史订单</p>
+                    <i class="el-icon-arrow-right"></i>
+                </div>
+            </div>
+            <div class="divOrders" v-if="order[0]">
+                <div class="title">最新订单</div>
+                <div class="timeStatus">
+                    <span>{{order[0].orderTime}}</span>
+                    <span>{{getStatus(order[0].status)}}</span>
+                    <!-- <span>正在派送</span> -->
+                </div>
+                <div class="dishList">
+                    <div v-for="(item,index) in order[0].orderDetails" :key="index" class="item">
+                        <span>{{item.name}}</span>
+                        <span>x{{item.number}}</span>
+                    </div>
+                </div>
+                <div class="result">
+                    <span>共{{order[0].sumNum}} 件商品,实付</span>
+                    <span class="price">￥{{order[0].amount}}</span>
+                </div>
+                <div class="btn" >
+                    <div class="btnAgain" type="danger" v-if="order[0].status === 2" @click="cancelOrder"
+                        style="color: #fff;background-color: #f56c6c">取消订单</div>
+                    <div class="btnAgain" type="danger" v-if="order[0].status === 3" @click="overOrder"
+                         style="color: #333333;background-color: gold">确认收货</div>
+                    <div class="btn" v-if="order[0].status === 4">
+                        <div class="btnAgain"  @click="addOrderAgain">再来一单</div>
+                        <div class="btnAgain" type="danger"  @click="deleteOrder"
+                             style="color: #fff;background-color: #f56c6c">删除订单</div>
+                    </div>
+                    <div class="btnAgain" type="danger" v-if="order[0].status === 5" @click="deleteOrder"
+                         style="color: #fff;background-color: #f56c6c">删除订单</div>
+
+                </div>
+            </div>
+            <div class="quitLogin" @click="toPageLogin" style="color: #333333;background-color: gold">
+                退出登录
+            </div>
+        </div>
+    </div>
+    <!-- 开发环境版本，包含了有帮助的命令行警告 -->
+    <script src="../../backend/plugins/vue/vue.js"></script>
+    <!-- 引入组件库 -->
+    <script src="../../backend/plugins/element-ui/index.js"></script>
+    <!-- 引入vant组件 -->
+    <script src="./../js/vant.min.js"></script>    
+    <!--不同屏幕尺寸根字体设置-->
+    <script src="./../js/base.js"></script>
+    <!-- 引入axios -->
+    <script src="../../backend/plugins/axios/axios.min.js"></script>
+    <script src="./../js/request.js"></script>
+    <script src="./../js/common.js"></script>
+    <script src="./../api/order.js"></script>
+    <script src="./../api/login.js"></script>
+    <script src="./../api/user.js"></script>
+    <script>
+        new Vue({
+            el:"#user",
+            data(){
+                return {
+                    userInfo:{},
+                    form:{
+                        id:'',
+                        name:'',
+                        phone: '',
+                        sex:'',
+                        idNumber:'',
+                        avatar:''
+                    },
+                    msgFlag:false,
+                    centerDialogVisible:false,
+                    order:[{
+                        orderTime:'',//下单时间
+                        status:undefined,//订单状态 1已结账，2未结账，3已退单，4已完成，5已取消
+                        orderDetails:[{
+                            name:'',//菜品名称
+                            number:undefined,//数量
+                        }],//明细
+                        amount:undefined,//实收金额
+                        sumNum:0,//菜品总数
+                    }],
+                    rules: {
+                        name:[
+                            { required: true, message: '请输入名字', trigger: 'blur' },
+                            { min: 2, max: 4, message: '长度在 2 到 4 个字符', trigger: 'blur' },
+                        ],
+                        phone: [
+                            {required: true,message: "⼿机号不能为空",trigger: "blur"},
+                            {pattern: /^1[3|4|5|6|7|8|9][0-9]\d{8}$/, message: "请输⼊正确的⼿机号码", trigger: "blur"}
+                        ],
+                        idNumber:[
+                            {required: true,message: "请输入身份证号",trigger: "blur"},
+                            {pattern: /^[1-9]\d{5}(18|19|20)\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$/, message: "请输⼊正确的身份号码", trigger: "blur"}
+                        ]
+                    }
+                }
+            },
+            computed:{},
+            mounted(){},
+            created(){
+                this.initData()
+            },
+            methods:{
+                goBack(){
+                    window.requestAnimationFrame(()=>{
+                        window.location.replace('/front/index.html')
+                    })
+                },
+                async goEditUserInfo() {
+                    const res = await orderListApi();
+                    this.centerDialogVisible = true;
+                    this.$nextTick(()=>{
+                        this.resetForm()
+                        this.form = res.data;
+                    })
+                },
+                save(){
+                    this.$refs.form.validate((valid) =>{
+                        if (valid){
+                            updateUserInfoApi(this.form).then((res) => {
+                                if (res.code === 1){
+                                    this.$notify({ type:'success', message:res.data});
+                                    sessionStorage.setItem('userInfo',JSON.stringify(this.form));
+                                    this.initData();
+                                    this.centerDialogVisible = false;
+                                }else {
+                                    this.$message.error(res.msg);
+                                }
+                            })
+                        }else {
+                            console.log('error submit!!');
+                            return false;
+                        }
+                    })
+                },
+                resetForm(){
+                    this.$refs['form'].resetFields();
+                },
+                cancle(){
+                    this.centerDialogVisible = false;
+                    this.resetForm();
+                },
+                toAddressPage(){
+                    window.requestAnimationFrame(()=>{
+                        window.location.href = '/front/page/address.html'
+                    })
+                },
+                toOrderPage(){
+                    window.requestAnimationFrame(()=>{
+                        window.location.href = '/front/page/order.html'
+                    })
+                },
+                initData(){
+                    this.userInfo = JSON.parse(sessionStorage.getItem('userInfo'))
+                    this.getLatestOrder()
+                },
+                //网络图片路径转换
+                imgPathConvert(path){
+                    return imgPath(path)
+                },
+                handleAvatarSuccess (response, file, fileList) {
+                    if(response.code === 0 && response.msg === '未登录'){
+                        window.top.location.href = '/front/page/login.html'
+                    }else{
+                        this.form.avatar = response.data
+                    }
+                },
+                onChange (file) {
+                    if(file){
+                        const suffix = file.name.split('.')[1]
+                        const size = file.size / 1024 / 1024 < 2
+                        if(['png','jpeg','jpg'].indexOf(suffix) < 0){
+                            this.$message.error('上传图片只支持 png、jpeg、jpg 格式！')
+                            this.$refs.upload.clearFiles()
+                            return false
+                        }
+                        if(!size){
+                            this.$message.error('上传文件大小不能超过 2MB!')
+                            return false
+                        }
+                        return file
+                    }
+                },
+                async getLatestOrder(){
+                    const params = {
+                        page:1,
+                        pageSize:1
+                    }
+                    const res = await orderPagingApi(params)
+                    if(res.code === 1){
+                        this.order = res.data.records
+                        if(this.order && this.order[0].orderDetails){
+                            let number = 0
+                            this.order[0].orderDetails.forEach(item=>{
+                                number += item.number
+                            })
+                            this.order[0].sumNum = number
+                        }
+                    }else{
+                        this.$notify({ type:'warning', message:res.msg});
+                    }
+                },
+                getStatus(status){
+                    let str = ''
+                    switch(status){
+                        case 1:
+                            str =  '待付款'
+                            break;
+                        case 2:
+                            str =  '正在派送'
+                            break;
+                        case 3:
+                            str =  '已派送'
+                            break;
+                        case 4:
+                            str =  '已完成'
+                            break;
+                        case 5:
+                            str =  '已取消'
+                            break;
+
+                    }
+                    return str
+                },
+                async addOrderAgain(){
+                    const res = await orderAgainApi({id:this.order[0].id})
+                    if(res.code === 1){
+                        window.requestAnimationFrame(()=>{
+                            window.location.href = '/front/index.html'
+                        })
+                    }else{
+                        this.$notify({ type:'warning', message:res.msg});
+                    }
+                },
+                async cancelOrder(){
+                    this.$confirm('将取消该订单，是否继续？', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning',
+                        customClass: 'msgbox'
+                    }).then(() => {
+                        const params = {
+                            status:5,
+                            id:this.order[0].id
+                        }
+                        editOrderDetail(params).then(res => {
+                            if (res.code === 1) {
+                                this.$notify({ type:'warning', message:'订单已取消'});
+                                this.order[0].status = 5;
+                            } else {
+                                this.$notify.error(res.msg || '操作失败');
+                            }
+                        }).catch(err => {
+                            this.$notify.error('请求出错了：' + err)
+                        })
+                    }).catch(() => {
+                        this.$notify({ type:'warning', message:'已取消操作'});
+                    });
+
+                },
+                overOrder(){
+                    this.$confirm('将确认收货，是否继续？', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning',
+                        customClass: 'msgbox'
+                    }).then(() => {
+                        const params = {
+                            status:4,
+                            id:this.order[0].id
+                        }
+                        editOrderDetail(params).then(res => {
+                            if (res.code === 1) {
+                                this.$notify({ type:'warning', message:'已确认收货'});
+                                this.order[0].status = 4;
+                            } else {
+                                this.$notify.error(res.msg || '操作失败');
+                            }
+                        }).catch(err => {
+                            this.$notify.error('请求出错了：' + err)
+                        })
+                    }).catch(() => {
+                        this.$notify({ type:'warning', message:'已取消操作'});
+                    });
+                },
+                deleteOrder(){
+                    this.$confirm('将删除该订单，是否继续？', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning',
+                        customClass: 'msgbox'
+                    }).then(() => {
+                        deleteOrderApi(this.order[0].id).then(res => {
+                            if (res.code === 1) {
+                                this.$notify({ type:'warning', message:'订单已删除'});
+                                this.initData();
+                            } else {
+                                this.$notify.error(res.msg || '操作失败');
+                            }
+                        }).catch(err => {
+                            this.$notify.error('请求出错了：' + err)
+                        })
+                    }).catch(() => {
+                        this.$notify({ type:'warning', message:'已取消操作'});
+                    });
+                },
+                toPageLogin(){
+                    this.$confirm('将退出当前账户，是否继续？', '提示', {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'warning',
+                        customClass: 'msgbox'
+                    }).then(() => {
+                       loginoutApi().then(res => {
+                           if(res.code === 1){
+                               sessionStorage.removeItem('userInfo')
+                               window.requestAnimationFrame(()=>{
+                                   window.location.href = '/front/page/login.html'
+                               })
+                           }else{
+                               this.$notify({ type:'warning', message:res.msg});
+                           }
+                       })
+                    }).catch(() => {
+                        this.$notify({ type:'warning', message:'已取消操作'});
+                    });
+                }
+            }
+        })
+    </script>
+</body>
+</html>
