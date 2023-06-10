@@ -28,7 +28,7 @@
 
 我采用的是七牛云存储图片，需配置好七牛云存储空间 及设置 cdn 加速域名。
 
-不知道怎么配置七牛云的可以参考我的博文：[七牛云搭配 PicGo 配置图床](https://www.jishuqin.cn/2023/02/18/%E4%B8%83%E7%89%9B%E4%BA%91%E6%90%AD%E9%85%8DPicGo%E9%85%8D%E7%BD%AE%E5%9B%BE%E5%BA%8A/)
+不知道怎么配置七牛云的可以参考我的博文：[七牛云搭配 PicGo 配置图床](https://blog.jishuqin.cn/2023/02/18/%E4%B8%83%E7%89%9B%E4%BA%91%E6%90%AD%E9%85%8DPicGo%E9%85%8D%E7%BD%AE%E5%9B%BE%E5%BA%8A/)
 
 图片的上传、删除 封装在工具类 `QiniuUtils`,需设置你自己的`accessKey`、`secretKey`、`bucket`、设置存储空间区域编号。
 
