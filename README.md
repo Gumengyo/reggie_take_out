@@ -5,7 +5,6 @@
 该项目为黑马程序员项目《瑞吉外卖》 [点击跳转项目教程](https://www.bilibili.com/video/BV13a411q753/?spm_id_from=333.337.search-card.all.click&vd_source=eb3ce27642efcc6516cfe22b34da20c0)，后端使用` springboot` + `mybatis plus` + `redis` 开发，前端使用 `element-ui`组件开发。
 - 外卖平台系统由前后端组成，后台系统有菜品管理（批量删除、起售停售）、套餐管理（修改、起售停售）订单明细等功能；移动端包含个人中心（下单、历史订单、修改地址）、购物车等功能。
 - 仓库前端代码由课程资料提供，个人仅作稍微改动，后端是我跟着视频慢慢撸出的，自己有另外实现部分功能，如：图片上传、定时清理缓存图片，以及完成课程剩余未实现内容。
-觉得不错的话，麻烦给我点个`Star`哟~
 
 ### 2. 界面展示
 
@@ -44,4 +43,10 @@
 ```java
 AliyunSmsUtils.sendMessage("短信签名名称","短信模板CODE",phone,code);
 ```
+### 5. 联系信息
 
+有其他疑问可以发送邮件联系我，[Email](mailto:374943980@qq.com)
+
+想了解我更多，可以访问我个人博客：[Gumeng's blog](blog.jishuqin.cn)
+
+觉得不错的话，麻烦给我点个`star`哟~
