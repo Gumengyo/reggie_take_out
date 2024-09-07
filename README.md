@@ -47,7 +47,7 @@ AliyunSmsUtils.sendMessage("短信签名名称","短信模板CODE",phone,code);
 
 - 有其他疑问可以发送邮件联系我，[Email](mailto:374943980@qq.com)
 
-- 想了解更多，可以访问我的个人主页。[顾梦の主页](https://www.jishuqin.cn/)
-- To learn more, you can visit my personal page.[Gumeng's page](https://www.jishuqin.cn/)
+- 想了解更多，可以访问我的个人主页。[顾梦の主页](https://gumengyo.top/)
+- To learn more, you can visit my personal page.[Gumeng's page](https://gumengyo.top/)
 
 觉得不错的话，麻烦给我点个`star`哟~
